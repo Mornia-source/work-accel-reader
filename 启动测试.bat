@@ -21,5 +21,6 @@ if not exist "node_modules\electron\dist\electron.exe" (
 )
 
 if not exist "test\sample-novel.txt" call node tools\make-sample.js
+if not exist "test\sample.epub" call node tools\make-sample-epub.js
 
 start "" "node_modules\electron\dist\electron.exe" . "%~dp0test\sample-novel.txt"

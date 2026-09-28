@@ -1,14 +1,16 @@
-const { app, BrowserWindow, Tray, Menu, globalShortcut, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Tray, globalShortcut, ipcMain, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
 const store = require('./store');
 const textLoader = require('./textLoader');
 const { createTrayIcon } = require('./trayIcon');
+const { createTrayMenu } = require('./trayMenu');
 
 let win = null;
 let settingsWin = null;
 let tray = null;
+let trayMenu = null;
 let bossHidden = false;
 let shortcutsSuspended = false; // 设置窗口录制快捷键时暂停全局快捷键
 let settingsWasOpen = false; // 老板键隐藏前设置窗口是否开着
@@ -141,25 +143,27 @@ function createTray() {
     if (win.isVisible()) win.focus();
     else win.show();
   });
-  refreshTrayMenu();
+  tray.on('right-click', () => trayMenu.show());
+}
+
+function trayMenuItems() {
+  const cfg = store.get();
+  const sc = cfg.shortcuts;
+  return [
+    { id: 'openFile', label: '打开文件…', accel: sc.openFile },
+    { id: 'toggleToc', label: '目录', accel: sc.toggleToc },
+    { id: 'openSettings', label: '设置…', accel: sc.openSettings },
+    { sep: true },
+    { id: 'togglePin', label: '始终置顶', accel: sc.togglePin, checked: cfg.alwaysOnTop },
+    { id: 'toggleClickThrough', label: '鼠标穿透', accel: sc.toggleClickThrough, checked: cfg.clickThrough },
+    { id: 'boss', label: '老板键隐藏', accel: sc.boss },
+    { sep: true },
+    { id: 'quit', label: '退出', danger: true },
+  ];
 }
 
 function refreshTrayMenu() {
-  if (!tray) return;
-  const cfg = store.get();
-  const sc = cfg.shortcuts;
-  tray.setContextMenu(
-    Menu.buildFromTemplate([
-      { label: '打开文件…', accelerator: sc.openFile || undefined, click: openFileDialog },
-      { label: '设置…', accelerator: sc.openSettings || undefined, click: openSettings },
-      { type: 'separator' },
-      { label: '始终置顶', type: 'checkbox', checked: cfg.alwaysOnTop, accelerator: sc.togglePin || undefined, click: togglePin },
-      { label: '鼠标穿透', type: 'checkbox', checked: cfg.clickThrough, accelerator: sc.toggleClickThrough || undefined, click: toggleClickThrough },
-      { label: '老板键隐藏', accelerator: sc.boss || undefined, click: toggleBoss },
-      { type: 'separator' },
-      { label: '退出', click: () => app.quit() },
-    ])
-  );
+  if (trayMenu) trayMenu.refresh();
 }
 
 // ---------- 动作 ----------
@@ -193,6 +197,7 @@ function toggleBoss() {
     win.hide();
     settingsWasOpen = !!(settingsWin && !settingsWin.isDestroyed() && settingsWin.isVisible());
     if (settingsWasOpen) settingsWin.hide();
+    trayMenu.hide();
     if (tray) {
       tray.destroy();
       tray = null;
@@ -231,6 +236,12 @@ const ACTIONS = {
   prevLine: () => send('nav', 'prevLine'),
   nextPage: () => send('nav', 'nextPage'),
   prevPage: () => send('nav', 'prevPage'),
+  nextChapter: () => send('nav', 'nextChapter'),
+  prevChapter: () => send('nav', 'prevChapter'),
+  toggleToc: () => {
+    if (!win.isVisible()) win.show();
+    send('nav', 'toggleToc');
+  },
   togglePin,
   toggleClickThrough,
   bgOpacityDown: () => adjustStyle('bgOpacity', -0.05, 0, 1, '背景不透明度', pct),
@@ -277,9 +288,9 @@ async function openFileDialog() {
 }
 
 function openBook(filePath) {
-  let paras;
+  let paras, chapters;
   try {
-    paras = textLoader.load(filePath);
+    ({ paras, chapters } = textLoader.load(filePath));
   } catch (e) {
     toast('打开失败：' + e.message);
     return;
@@ -295,6 +306,7 @@ function openBook(filePath) {
     path: filePath,
     title: path.basename(filePath, path.extname(filePath)),
     paras,
+    chapters,
     progress: cfg.progress[filePath] || { para: 0, offset: 0 },
   });
 }
@@ -341,6 +353,16 @@ ipcMain.on('reader:openFile', openFileDialog);
 ipcMain.on('reader:openSettings', openSettings);
 ipcMain.on('reader:dropFile', (_e, p) => openBook(p));
 ipcMain.on('reader:hide', () => win.hide());
+
+// 目录打开期间临时关闭鼠标穿透并获取焦点，否则点不了也收不到按键
+ipcMain.on('reader:tocOpen', (_e, open) => {
+  if (open) {
+    win.setIgnoreMouseEvents(false);
+    win.focus();
+  } else {
+    applyClickThrough();
+  }
+});
 
 // ---------- IPC：设置窗口 ----------
 
@@ -418,6 +440,10 @@ ipcMain.on('settings:reset', (_e, section) => {
 
 app.whenReady().then(() => {
   createWindow();
+  trayMenu = createTrayMenu({
+    getItems: trayMenuItems,
+    onSelect: (id) => (id === 'quit' ? app.quit() : ACTIONS[id] && ACTIONS[id]()),
+  });
   createTray();
   registerShortcuts();
 });

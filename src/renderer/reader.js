@@ -7,7 +7,8 @@ const viewport = $('viewport');
 const content = $('content');
 const root = document.documentElement.style;
 
-let book = null; // { path, title, paras }
+let book = null; // { path, title, paras, chapters: [{ title, para }] }
+let chapterSet = new Set(); // 章节标题所在段落下标
 let start = 0; // 当前渲染窗口的第一段下标
 let lineH = 27;
 let rows = 1; // 一屏能放下的整行数
@@ -50,6 +51,7 @@ function renderFrom(newStart) {
   for (let i = start; i < end; i++) {
     const p = document.createElement('p');
     p.textContent = book.paras[i];
+    if (chapterSet.has(i)) p.className = 'chapter';
     frag.appendChild(p);
   }
   content.replaceChildren(frag);
@@ -119,14 +121,135 @@ function afterMove() {
 
 function updateStatus(a) {
   const pct = ((a.para / Math.max(1, book.paras.length - 1)) * 100).toFixed(1);
-  $('status').textContent = pct + '%';
+  const ch = book.chapters[chapterIndexAt(a.para)];
+  $('status-chapter').textContent = ch ? ch.title : '';
+  $('status-pct').textContent = pct + '%';
 }
+
+// ---------- 章节 ----------
+
+// 当前段落所属章节下标（最后一个 para <= 当前段的章节），没有则 -1
+function chapterIndexAt(para) {
+  const chs = book.chapters;
+  let lo = 0;
+  let hi = chs.length - 1;
+  let ans = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (chs[mid].para <= para) {
+      ans = mid;
+      lo = mid + 1;
+    } else hi = mid - 1;
+  }
+  return ans;
+}
+
+function jumpTo(para) {
+  restoreAnchor({ para: Math.max(0, Math.min(para, book.paras.length - 1)), offset: 0 });
+}
+
+function jumpChapter(dir) {
+  if (!book || !book.chapters.length) return toast('没有识别到章节');
+  const a = currentAnchor();
+  const i = chapterIndexAt(a.para);
+  let target;
+  if (dir > 0) {
+    target = book.chapters[i + 1];
+    if (!target) return toast('已经是最后一章');
+  } else {
+    // 已经读过本章开头就先回到本章开头，否则去上一章
+    const cur = book.chapters[i];
+    const atStart = cur && a.para === cur.para && a.offset === 0;
+    target = cur && !atStart ? cur : book.chapters[i - 1];
+    if (!target) return jumpTo(0);
+  }
+  jumpTo(target.para);
+  toast(target.title);
+}
+
+// ---------- 目录 ----------
+
+const toc = $('toc');
+const tocList = $('toc-list');
+const tocFilter = $('toc-filter');
+let tocItems = []; // 当前筛选结果 [{ title, para, index }]
+let tocActive = -1;
+
+function tocIsOpen() {
+  return toc.classList.contains('open');
+}
+
+function openToc() {
+  if (!book) return toast('还没有打开书');
+  if (!book.chapters.length) return toast('没有识别到章节');
+  toc.classList.add('open');
+  window.reader.tocOpen(true);
+  tocFilter.value = '';
+  renderToc();
+  tocFilter.focus();
+}
+
+function closeToc() {
+  if (!tocIsOpen()) return;
+  toc.classList.remove('open');
+  window.reader.tocOpen(false);
+}
+
+function renderToc() {
+  const q = tocFilter.value.trim().toLowerCase();
+  const cur = chapterIndexAt(currentAnchor().para);
+  tocItems = book.chapters
+    .map((c, index) => ({ ...c, index }))
+    .filter((c) => !q || c.title.toLowerCase().includes(q));
+  const frag = document.createDocumentFragment();
+  tocItems.forEach((c, i) => {
+    const li = document.createElement('li');
+    li.textContent = c.title;
+    if (c.index === cur) li.classList.add('current');
+    li.addEventListener('click', () => pickToc(i));
+    frag.appendChild(li);
+  });
+  tocList.replaceChildren(frag);
+  $('toc-count').textContent = `${tocItems.length} / ${book.chapters.length}`;
+  const curPos = tocItems.findIndex((c) => c.index === cur);
+  setTocActive(curPos >= 0 ? curPos : 0, 'center');
+}
+
+function setTocActive(i, block = 'nearest') {
+  if (!tocItems.length) return;
+  tocActive = Math.max(0, Math.min(i, tocItems.length - 1));
+  [...tocList.children].forEach((li, k) => li.classList.toggle('active', k === tocActive));
+  tocList.children[tocActive].scrollIntoView({ block });
+}
+
+function pickToc(i) {
+  const c = tocItems[i];
+  if (!c) return;
+  closeToc();
+  jumpTo(c.para);
+}
+
+function onTocKey(e) {
+  const page = Math.max(1, Math.floor(tocList.clientHeight / 26) - 1);
+  const moves = { ArrowDown: 1, ArrowUp: -1, PageDown: page, PageUp: -page };
+  if (e.key === 'Escape') closeToc();
+  else if (e.key === 'Enter') pickToc(tocActive);
+  else if (moves[e.key]) setTocActive(tocActive + moves[e.key]);
+  else return;
+  e.preventDefault();
+}
+
+tocFilter.addEventListener('input', renderToc);
+$('toc-close').addEventListener('click', closeToc);
 
 const NAV = {
   nextLine: () => scrollLines(1),
   prevLine: () => scrollLines(-1),
   nextPage: () => scrollLines(rows),
   prevPage: () => scrollLines(-rows),
+  nextChapter: () => jumpChapter(1),
+  prevChapter: () => jumpChapter(-1),
+  toggleToc: () => (tocIsOpen() ? closeToc() : openToc()),
 };
 
 // ---------- 提示 ----------
@@ -149,7 +272,9 @@ window.reader.on('mode', ({ clickThrough }) => {
   document.body.classList.toggle('click-through', clickThrough);
 });
 window.reader.on('book', (b) => {
+  closeToc();
   book = b;
+  chapterSet = new Set(b.chapters.map((c) => c.para));
   $('title').textContent = b.title;
   document.title = b.title;
   renderFrom(b.progress.para - MARGIN);
@@ -159,11 +284,13 @@ window.reader.on('book', (b) => {
 window.addEventListener('resize', () => layout());
 
 viewport.parentElement.addEventListener('wheel', (e) => {
+  if (tocIsOpen()) return;
   scrollLines(e.deltaY > 0 ? 3 : -3);
 });
 
 // 窗口有焦点时的本地按键（不带 Alt）
 window.addEventListener('keydown', (e) => {
+  if (tocIsOpen()) return onTocKey(e);
   if (e.altKey || e.ctrlKey) return;
   const map = {
     ArrowDown: 'nextLine',
@@ -186,6 +313,7 @@ document.addEventListener('drop', (e) => {
 });
 
 $('btn-open').addEventListener('click', () => window.reader.openFile());
+$('btn-toc').addEventListener('click', () => NAV.toggleToc());
 $('btn-settings').addEventListener('click', () => window.reader.openSettings());
 $('btn-hide').addEventListener('click', () => window.reader.hide());
 

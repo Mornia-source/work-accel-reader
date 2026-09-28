@@ -9,13 +9,22 @@
 <body>
   <div id="bg"></div>
   <div id="bar">
-    <span id="title">拖入 TXT 文件，或按 Alt+O 打开</span>
+    <span id="title">拖入 TXT / EPUB 文件，或按 Alt+O 打开</span>
     <button id="btn-open" title="打开文件">打开</button>
+    <button id="btn-toc" title="目录">目录</button>
     <button id="btn-settings" title="设置">设置</button>
     <button id="btn-hide" title="隐藏到托盘">×</button>
   </div>
   <div id="viewport"><div id="content"></div></div>
-  <div id="status"></div>
+  <div id="status"><span id="status-chapter"></span><span id="status-pct"></span></div>
+  <div id="toc">
+    <div id="toc-head">
+      <input id="toc-filter" type="text" placeholder="搜索章节" spellcheck="false" />
+      <span id="toc-count"></span>
+      <button id="toc-close" title="关闭 (Esc)">×</button>
+    </div>
+    <ul id="toc-list"></ul>
+  </div>
   <div id="toast"></div>
   <script src="reader.js"></script>
 </body>

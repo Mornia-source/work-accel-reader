@@ -85,12 +85,95 @@ body.click-through #bar { display: none; }
   word-break: break-all;
 }
 
+#content p.chapter {
+  text-indent: 0;
+  font-weight: bold;
+}
+
 #status {
   position: fixed;
-  right: 8px; bottom: 2px;
+  left: 10px; right: 8px; bottom: 2px;
+  display: flex;
+  gap: 8px;
   color: rgba(var(--fg), calc(var(--fg-a) * 0.45));
   font: 11px 'Microsoft YaHei', sans-serif;
+  white-space: nowrap;
 }
+#status-chapter {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 目录：盖住整个阅读窗口、不透明，保证在任何背景透明度下都看得清 */
+#toc {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  background: #252525;
+  color: #ddd;
+  font: 13px 'Microsoft YaHei', sans-serif;
+  z-index: 4;
+}
+#toc.open { display: flex; }
+
+#toc-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 4px 6px;
+  border-bottom: 1px solid #3a3a3a;
+  -webkit-app-region: drag;
+}
+#toc-filter {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid #4a4a4a;
+  border-radius: 2px;
+  background: #1c1c1c;
+  color: #ddd;
+  font: 12px 'Microsoft YaHei', sans-serif;
+  -webkit-app-region: no-drag;
+}
+#toc-filter:focus { outline: none; border-color: #6cb6ff; }
+#toc-count { color: #888; font-size: 11px; }
+#toc-close {
+  -webkit-app-region: no-drag;
+  height: 22px;
+  padding: 0 7px;
+  border: 1px solid #4a4a4a;
+  border-radius: 2px;
+  background: #2e2e2e;
+  color: #ccc;
+  font: 12px 'Microsoft YaHei', sans-serif;
+}
+#toc-close:hover { background: #3a3a3a; }
+
+#toc-list {
+  flex: 1;
+  margin: 0;
+  padding: 2px 0;
+  list-style: none;
+  overflow-y: auto;
+}
+#toc-list li {
+  height: 26px;
+  line-height: 26px;
+  padding: 0 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+#toc-list li:hover { background: #2f2f2f; }
+#toc-list li.active { background: #37414d; }
+#toc-list li.current { color: #6cb6ff; }
+#toc-list::-webkit-scrollbar { width: 8px; }
+#toc-list::-webkit-scrollbar-thumb { background: #444; }
 
 #toast {
   position: fixed;
