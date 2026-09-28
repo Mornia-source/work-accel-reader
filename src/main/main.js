@@ -178,8 +178,16 @@ function toggleClickThrough() {
   toast(cfg.clickThrough ? '鼠标穿透：开' : '鼠标穿透：关');
 }
 
+// 全局快捷键按住时会连发，老板键必须防抖，否则会在隐藏/显示之间来回切换导致闪烁卡死
+const BOSS_COOLDOWN_MS = 600;
+let lastBossToggle = 0;
+
 // 老板键：隐藏所有窗口 + 销毁托盘图标 + 只保留老板键
 function toggleBoss() {
+  const now = Date.now();
+  if (now - lastBossToggle < BOSS_COOLDOWN_MS) return;
+  lastBossToggle = now;
+
   bossHidden = !bossHidden;
   if (bossHidden) {
     win.hide();
@@ -194,7 +202,18 @@ function toggleBoss() {
     if (settingsWasOpen && settingsWin && !settingsWin.isDestroyed()) settingsWin.showInactive();
     createTray();
   }
-  registerShortcuts();
+  // 老板键本身保持注册不动（在它自己的回调里注销再注册会被连发的按键再次触发），只切换其余快捷键
+  setOtherShortcuts(!bossHidden);
+}
+
+function setOtherShortcuts(enabled) {
+  for (const [name, accel] of Object.entries(store.get().shortcuts)) {
+    if (name === 'boss' || !accel || !ACTIONS[name]) continue;
+    try {
+      if (!enabled) globalShortcut.unregister(accel);
+      else if (!shortcutsSuspended && !globalShortcut.isRegistered(accel)) globalShortcut.register(accel, ACTIONS[name]);
+    } catch {}
+  }
 }
 
 function adjustStyle(key, delta, lo, hi, label, fmt) {
