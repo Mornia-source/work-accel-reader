@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <title>阅读器设置</title>
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <section>
+    <h2>外观 <button class="link" data-reset="style">恢复默认</button></h2>
+
+    <div class="row">
+      <label>背景颜色</label>
+      <input type="color" data-style="bgColor" />
+      <input type="text" class="hex" data-style-hex="bgColor" maxlength="7" />
+    </div>
+    <div class="row">
+      <label>背景不透明度</label>
+      <input type="range" data-style="bgOpacity" min="0" max="1" step="0.01" />
+      <span class="val" data-val="bgOpacity"></span>
+    </div>
+    <div class="row">
+      <label>文字颜色</label>
+      <input type="color" data-style="textColor" />
+      <input type="text" class="hex" data-style-hex="textColor" maxlength="7" />
+    </div>
+    <div class="row">
+      <label>文字不透明度</label>
+      <input type="range" data-style="textOpacity" min="0.05" max="1" step="0.01" />
+      <span class="val" data-val="textOpacity"></span>
+    </div>
+    <div class="row">
+      <label>字体</label>
+      <select id="font" data-style="fontFamily"></select>
+    </div>
+    <div class="row">
+      <label>字号</label>
+      <input type="range" data-style="fontSize" min="8" max="72" step="1" />
+      <span class="val" data-val="fontSize"></span>
+    </div>
+    <div class="row">
+      <label>行距</label>
+      <input type="range" data-style="lineHeight" min="1" max="3" step="0.1" />
+      <span class="val" data-val="lineHeight"></span>
+    </div>
+    <div id="preview"><span>预览：天色渐暗，他推开了门。The quick brown fox.</span></div>
+  </section>
+
+  <section>
+    <h2>窗口</h2>
+    <div class="row">
+      <label>始终置顶</label>
+      <input type="checkbox" data-flag="alwaysOnTop" />
+    </div>
+    <div class="row">
+      <label>鼠标穿透</label>
+      <input type="checkbox" data-flag="clickThrough" />
+      <span class="hint">开启后窗口无法点击，用快捷键或托盘菜单关闭</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>快捷键 <button class="link" data-reset="shortcuts">恢复默认</button></h2>
+    <p class="hint">点击输入框后按下组合键；Backspace 清空，Esc 取消。全局生效，窗口没有焦点也能用。</p>
+    <table id="shortcuts"></table>
+  </section>
+
+  <script src="settings.js"></script>
+</body>
+</html>

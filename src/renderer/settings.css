@@ -1,0 +1,110 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 8px 14px 16px;
+  background: #f3f3f3;
+  color: #1a1a1a;
+  font: 13px 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
+  user-select: none;
+}
+
+section {
+  padding: 6px 0 10px;
+  border-bottom: 1px solid #dcdcdc;
+}
+section:last-child { border-bottom: none; }
+
+h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 0 6px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #333;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.row > label {
+  flex: 0 0 96px;
+  color: #444;
+}
+
+input[type='range'] { flex: 1; min-width: 0; }
+input[type='color'] {
+  width: 36px;
+  height: 22px;
+  padding: 0 1px;
+  border: 1px solid #aaa;
+  border-radius: 2px;
+  background: #fff;
+}
+input[type='text'] {
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid #b8b8b8;
+  border-radius: 2px;
+  background: #fff;
+  font: inherit;
+  color: inherit;
+}
+input[type='text']:focus { outline: none; border-color: #0067c0; }
+.hex { width: 80px; font-family: Consolas, monospace !important; }
+#font {
+  flex: 1;
+  height: 24px;
+  border: 1px solid #b8b8b8;
+  border-radius: 2px;
+  background: #fff;
+  font: inherit;
+}
+
+.val {
+  flex: 0 0 44px;
+  text-align: right;
+  font-family: Consolas, monospace;
+  color: #555;
+}
+
+.hint { color: #777; font-size: 12px; }
+p.hint { margin: 0 0 6px; }
+
+button.link {
+  border: none;
+  background: none;
+  color: #0067c0;
+  font: 12px inherit;
+  cursor: pointer;
+  padding: 0;
+}
+button.link:hover { text-decoration: underline; }
+
+#preview {
+  margin: 6px 0 2px;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  /* 棋盘格底，看得出透明度 */
+  background: repeating-conic-gradient(#ddd 0 25%, #fff 0 50%) 0 0 / 12px 12px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+table { width: 100%; border-collapse: collapse; }
+td { padding: 2px 0; }
+td:first-child { width: 120px; color: #444; }
+td:last-child { width: 40px; text-align: right; }
+
+.key {
+  width: 100%;
+  cursor: pointer;
+  font-family: Consolas, 'Microsoft YaHei', monospace !important;
+}
+.key.recording { border-color: #0067c0; background: #eaf3fc; }
+.key.error { border-color: #c42b1c; background: #fdecea; }
+.key-msg { color: #c42b1c; font-size: 12px; }

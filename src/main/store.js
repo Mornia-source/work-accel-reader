@@ -34,6 +34,7 @@ const DEFAULTS = {
     fontSmaller: 'Alt+-',
     fontLarger: 'Alt+=',
     openFile: 'Alt+O',
+    openSettings: 'Alt+S',
   },
 };
 
@@ -80,4 +81,7 @@ function flush() {
   fs.writeFileSync(file(), JSON.stringify(config, null, 2));
 }
 
-module.exports = { get, save, flush };
+// 深拷贝一份默认值，供“恢复默认”使用
+const defaults = () => JSON.parse(JSON.stringify(DEFAULTS));
+
+module.exports = { get, save, flush, defaults };

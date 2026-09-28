@@ -186,6 +186,7 @@ document.addEventListener('drop', (e) => {
 });
 
 $('btn-open').addEventListener('click', () => window.reader.openFile());
+$('btn-settings').addEventListener('click', () => window.reader.openSettings());
 $('btn-hide').addEventListener('click', () => window.reader.hide());
 
 window.reader.ready();
