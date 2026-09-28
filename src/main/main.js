@@ -18,6 +18,9 @@ let settingsWasOpen = false; // 老板键隐藏前设置窗口是否开着
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const round2 = (v) => Math.round(v * 100) / 100;
 
+// 固定配置目录：打包后 productName 不同会改变默认 userData 路径，导致设置和进度“丢失”
+app.setPath('userData', path.join(app.getPath('appData'), 'work-accel-reader'));
+
 if (!app.requestSingleInstanceLock()) app.quit();
 
 // 命令行里传入的小说文件（启动测试.bat 用）

@@ -42,13 +42,27 @@ npm start
 
 测试文件可用 `node tools/make-sample.js`（GBK 编码长篇 TXT）和 `node tools/make-sample-epub.js` 生成到 `test/`。
 
+## 打包
+
+```bash
+npm run dist
+```
+
+在 `dist/` 生成：
+
+- `WorkAccelReader-<版本>-portable.exe`：单文件便携版，双击即用，适合直接发给别人
+- `WorkAccelReader-<版本>-win-x64.zip`：解压版，启动更快
+
+国内网络可先设置镜像：`ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`、`ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/`。
+
 ## 结构
 
 ```
 src/main/main.js        主进程：窗口、全局快捷键、老板键、IPC
 src/main/textLoader.js  格式解析：所有格式统一输出 { paras, chapters }
 src/main/trayMenu.js    自绘托盘右键菜单
-src/main/store.js       配置持久化（userData/config.json）
+src/main/store.js       配置持久化（%APPDATA%/work-accel-reader/config.json）
+src/main/png.js         PNG 编码，生成托盘图标和打包图标
 src/renderer/           阅读窗口、设置窗口、托盘菜单页面
 tools/                  测试文件生成脚本
 ```
