@@ -1,0 +1,4 @@
+node_modules/
+dist/
+# 测试文件由 tools/ 下的脚本生成
+test/

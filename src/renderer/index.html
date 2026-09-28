@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <title>阅读器</title>
+  <link rel="stylesheet" href="reader.css" />
+</head>
+<body>
+  <div id="bg"></div>
+  <div id="bar">
+    <span id="title">拖入 TXT 文件，或按 Alt+O 打开</span>
+    <button id="btn-open" title="打开文件">打开</button>
+    <button id="btn-hide" title="隐藏到托盘">×</button>
+  </div>
+  <div id="viewport"><div id="content"></div></div>
+  <div id="status"></div>
+  <div id="toast"></div>
+  <script src="reader.js"></script>
+</body>
+</html>
